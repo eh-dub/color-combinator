@@ -1,0 +1,7 @@
+{
+  "name": "Color Combinator",
+  "id": "755559299451656995",
+  "api": "1.0.0",
+  "main": "public/figma.js",
+  "ui": "dist/index.html"
+}

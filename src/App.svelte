@@ -1,9 +1,12 @@
+<div>
 <h1>Hello {name}!</h1>
 <p>
   <Counter />
   <Counter value={1}>Counter 1</Counter>
   <Counter value={$count} step={3}>Counter 2</Counter>
 </p>
+
+</div>
 
 <style>
   h1 {
