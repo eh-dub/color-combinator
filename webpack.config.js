@@ -12,8 +12,8 @@ module.exports = (env, argv) => ({
 
   entry: {
     ui: './public/bundle.js', // The entry point for your UI code
-    style: ["./public/bundle.css", "./public/global.css"]
-    // code: './src/code.ts', // The entry point for your plugin code
+    style: ["./public/bundle.css", "./public/global.css"],
+    code: './src/figma.ts', // The entry point for your plugin code
   },
 
   module: {
