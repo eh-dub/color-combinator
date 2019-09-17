@@ -133,14 +133,17 @@ function getSolidPaints(fills: readonly Paint[]): SolidPaint[] {
 }
 
 function doesTextNodeHaveSolidPaint(node: TextNode, paint: SolidPaint): boolean {
+  if (figma.mixed == node.fills) {
+    figma.closePlugin(`"Combinate Colors" is fucking broke`);
+  }
   const nodeFills = node.fills as readonly Paint[];
-    const solidNodeFills: SolidPaint[] = getSolidPaints(nodeFills);
+  const solidNodeFills: SolidPaint[] = getSolidPaints(nodeFills);
 
-    if (solidNodeFills.length < 1) {
-      return false;
-    } else {
-      return areSolidPaintsEqual(solidNodeFills[0], paint);
-    }
+  if (solidNodeFills.length < 1) {
+    return false;
+  } else {
+    return areSolidPaintsEqual(solidNodeFills[0], paint);
+  }
 }
 
 function areSolidPaintsEqual(sp1: SolidPaint, sp2: SolidPaint) {
@@ -186,6 +189,9 @@ function combinateColors(msg: any) {
   const fills: SolidPaint[] = [];
 
   textNodes.forEach(n => {
+    if (figma.mixed == n.fills) {
+      figma.closePlugin(`"Combinate Colors" is fucking broke`);
+    }
     const nodeFills = n.fills as readonly Paint[];
     const solidNodeFills: SolidPaint[] = getSolidPaints(nodeFills);
 
