@@ -13,11 +13,12 @@ module.exports = (env, argv) => ({
   entry: {
     ui: './public/bundle.js', // The entry point for your UI code
     style: ["./public/bundle.css", "./public/global.css"],
-    code: './src/figma.ts', // The entry point for your plugin code
+    figma: './src/figma.ts', // The entry point for your plugin code
   },
 
   module: {
     rules: [
+      { test: /\.tsx?$/, use: 'ts-loader', exclude: /node_modules/ },
       {
         test: /\.html$/,
         loader: 'html-loader'
@@ -33,7 +34,7 @@ module.exports = (env, argv) => ({
 
   },
   output: {
-    filename: '[name]-webpack.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'), // Compile into a folder called "dist"
   },
 

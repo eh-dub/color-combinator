@@ -37,7 +37,7 @@ figma.ui.onmessage = msg => {
   figma.closePlugin();
 };
 
-function createRectangles(msg) {
+function createRectangles(msg: any) {
   const nodes: SceneNode[] = [];
   for (let i = 0; i < msg.count; i++) {
     const rect = figma.createRectangle();
@@ -50,15 +50,15 @@ function createRectangles(msg) {
   figma.viewport.scrollAndZoomIntoView(nodes);
 }
 
-function halveOpacity(msg) {
+function halveOpacity(msg: any) {
   figma.currentPage.selection
     .forEach(node => {
       if ("opacity" in node) node.opacity *= 0.5;
     })
 }
 
-function getColors(msg) {
-  const fills = [];
+function getColors(msg: any) {
+  const fills: Paint[] = [];
   figma.currentPage.selection
     .forEach(node => {
       if ("fills" in node) {
@@ -72,42 +72,81 @@ function getColors(msg) {
 }
 
 function cloneFrame(cloneNum = 1) {
-  const frame = findFrame(figma.currentPage.selection[0]);
-  if (frame) {
-    const newFrame = frame.clone();
-    newFrame.x = newFrame.x + (newFrame.width*cloneNum) + (100*cloneNum);
-    console.log("cloned frame?");
-  }
-}
-
-function findFrame(selectedNode) {
-  if (!selectedNode) return undefined;
-
-  if (selectedNode.type !== "FRAME") {
-    return findFrame(selectedNode.parent);
+  if (figma.currentPage.selection.length === 0) {
+    figma.closePlugin(`"Clone Frame" works on exactly one node.`);
   } else {
+    const frame: FrameNode = findFrame(figma.currentPage.selection[0]);
+    if (frame) {
+      const newFrame = frame.clone();
+      newFrame.x = newFrame.x + (newFrame.width*cloneNum) + (100*cloneNum);
+      console.log("cloned frame?");
+    }
+  }
+  
+}
+
+function findFrame(selectedNode: SceneNode): FrameNode {
+  if (selectedNode.type === "FRAME") {
     return selectedNode;
+  } else if (selectedNode.parent !== null) {
+    return findFrame(selectedNode.parent as SceneNode);
+  } else {
+    return figma.createFrame();
+    figma.closePlugin(`"Find Frame" requires the selected element to be contained in a frame.`);
   }
 }
 
-function swapColors(msg) {
+
+function swapColors(msg: any) {
   const selection = getTextNodes(figma.currentPage.selection);
 
   if (selection.length !== 2) {
     figma.closePlugin(`"Swap Colors" works on exactly two text nodes.`);
   } 
   const [first, second] = selection;
-  if ("fills" in first && "fills" in second) {
-    const fill1 = first.fills[0];
-    const fill2 = second.fills[0];
+  const firstFills = first.fills as readonly Paint[];
+  const secondFills = second.fills as readonly Paint[];
+
+  if (firstFills.length === 0 || secondFills.length === 0) {
+    figma.closePlugin(`"Swap Colors" requires TextNodes to have a single Solid Paint fill.`)
+  }
+
+  const [firstFill] = first.fills as readonly Paint[];
+  const [secondFill] = second.fills as readonly Paint[];
+  if (firstFill.type === "SOLID" && secondFill.type === "SOLID") {
+    const fill1: SolidPaint = firstFill as SolidPaint;
+    const fill2: SolidPaint = secondFill as SolidPaint;
     console.log(`${areColorsEqual(fill1.color, fill2.color)}      ${fill2}`);
     first.fills = [fill2];
     second.fills = [fill1];
   }
+
+  
 }
 
-function getTextNodes(nodes: readonly SceneNode[]) {
-  return nodes.filter(n => n.type === "TEXT");
+function getTextNodes(nodes: readonly SceneNode[]): TextNode[] {
+  return nodes.filter(n => n.type === "TEXT") as TextNode[];
+}
+
+function getSolidPaints(fills: readonly Paint[]): SolidPaint[] {
+  return fills.filter(f => f.type === "SOLID") as SolidPaint[];
+}
+
+function doesTextNodeHaveSolidPaint(node: TextNode, paint: SolidPaint): boolean {
+  const nodeFills = node.fills as readonly Paint[];
+    const solidNodeFills: SolidPaint[] = getSolidPaints(nodeFills);
+
+    if (solidNodeFills.length < 1) {
+      return false;
+    } else {
+      return areSolidPaintsEqual(solidNodeFills[0], paint);
+    }
+}
+
+function areSolidPaintsEqual(sp1: SolidPaint, sp2: SolidPaint) {
+  return sp1.blendMode === sp2.blendMode &&
+         sp1.color === sp2.color &&
+         sp1.opacity === sp2.opacity;
 }
 
 function areColorsEqual(c1: RGB, c2: RGB) {
@@ -117,11 +156,11 @@ function areColorsEqual(c1: RGB, c2: RGB) {
          );
 }
 
-function toString({r,g,b}: RGB) {
+function rgbToString({r,g,b}: RGB): string {
   return `${r},${g},${b}`;
 }
 
-function clone(obj) {
+function clone(obj: any) {
   return JSON.parse(JSON.stringify(obj));
 }
 
@@ -135,30 +174,44 @@ function clone(obj) {
 //        if I permute [[Node]] and assign colors to the same spots (i.e. pink -> 1)
 //          then I should get the same result.
 
-function combinateColors(msg) {
+function combinateColors(msg: any) {
   const selection = figma.currentPage.selection;
 
+  const textNodes = getTextNodes(figma.currentPage.selection) ;
+
+  if (textNodes.length <= 1) {
+    figma.closePlugin(`"Combinate Colors" requires at least 2 text nodes`);
+  }
+
   const fills: SolidPaint[] = [];
-  selection.forEach(n => {
-    if ("fills" in n) {
-      if (fills.filter(f => areColorsEqual(f.color, n.fills[0].color)).length === 0)
-        fills.push(n.fills[0]);
-    } else {
-      console.error(`"Combinate Colors" accepts only nodes with fills`);
+
+  textNodes.forEach(n => {
+    const nodeFills = n.fills as readonly Paint[];
+    const solidNodeFills: SolidPaint[] = getSolidPaints(nodeFills);
+
+    // GET FILLS
+    if (solidNodeFills.length < 1) {
+      figma.closePlugin(`"Combinate Colors" requires that text nodes' first fill is a SolidPaint`);
     }
+
+    let nodeFill: SolidPaint = solidNodeFills[0];
+
+    // TODO: replace color equality check with generic equality check
+    if (fills.filter(f => areColorsEqual(f.color, f.color)).length === 0)
+      fills.push(nodeFill);
+
+    // CREATE MAP OF COLOR-STRINGS TO NODES
+
   });
 
-  const colorsToNodes = {};
-  selection.forEach(n => {
-    if ("fills" in n) {
-      const c = toString(n.fills[0].color);
-      if (colorsToNodes[c]) {
-        colorsToNodes[c] = colorsToNodes[c].concat(n);
-      } else {
-        colorsToNodes[c] = [n];
-      }
+  const colorsToNodes: {[key: string]: TextNode[]} = {};
+  fills.forEach(f => {
+    const c = rgbToString(f.color);
+    const nodes = textNodes.filter(n => doesTextNodeHaveSolidPaint(n, f));
+    if (colorsToNodes[c]) {
+      colorsToNodes[c] = colorsToNodes[c].concat(nodes);
     } else {
-      // fills.push(null);
+      colorsToNodes[c] = nodes;
     }
   });
   const colorOrders = permutation(fills);
@@ -176,9 +229,9 @@ function combinateColors(msg) {
       })
     })
   });
-
-function permutation(array) {
-  function p(array, temp) {
+}
+function permutation<T>(array: T[]): T[][] {
+  function p(array: T[], temp: T[]) {
       var i, x;
       if (!array.length) {
           result.push(temp);
@@ -190,7 +243,7 @@ function permutation(array) {
       }
   }
 
-  var result = [];
+  var result: T[][] = [];
   p(array, []);
   return result;
 }
