@@ -52,11 +52,6 @@ module.exports = (env, argv) => ({
 
     }),
     new HtmlWebpackInlineSourcePlugin(),
-    // new HTMLInlineCSSWebpackPlugin({
-    //   replace: {
-    //     removeTarget: true,
-    //     target: '<!-- inline_css_plugin -->',
-    //   },
-    // })
+
   ],
 })
