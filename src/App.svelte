@@ -1,22 +1,19 @@
 <div>
-  <h1>Color Combinator</h1>
   <button on:click={combinateColors}>Combinate Colors</button>
-  {#each paints as {rgbColor}}
-    <div class="paint-chip" style={`background-color: ${rgbToHex(rgbColor)}`}>
-    </div>
-  {/each}
 </div>
 
 <style>
-  h1 {
-    color: purple;
+  
+  div {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
   }
 
-  .paint-chip {
-    width: 25px;
-    height: 25px;
-    border: 1px solid #AAA;
-    border-radius: 12.5px;
+  button {
+    font-size: 2em;
   }
 </style>
 
