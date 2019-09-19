@@ -1,11 +1,6 @@
-// This plugin will open a modal to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
-
 // This file holds the main code for the plugins. It has access to the *document*.
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser enviroment (see documentation).
-
-// import cloneDeep from 'lodash/cloneDeep';
 
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__);
@@ -16,19 +11,8 @@ figma.showUI(__html__);
 figma.ui.onmessage = msg => {
   // One way of distinguishing between different types of messages sent from
   // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
-    createRectangles(msg);
-  } else if (msg.type === 'halve-opacity') {
-    halveOpacity(msg);
-  } else if (msg.type === 'get-colors') {
-    getColors(msg);
-    return;
-  } else if (msg.type === 'clone-frame') {
-    cloneFrame(1);
-  } else if (msg.type === 'swap-colors') {
-    cloneFrame(1);
-    swapColors(msg);
-  } else if (msg.type === 'combinate-colors') {
+
+  if (msg.type === 'combinate-colors') {
     combinateColors(msg);
   }
 
@@ -36,26 +20,6 @@ figma.ui.onmessage = msg => {
   // keep running, which shows the cancel button at the bottom of the screen.
   figma.closePlugin();
 };
-
-function createRectangles(msg: any) {
-  const nodes: SceneNode[] = [];
-  for (let i = 0; i < msg.count; i++) {
-    const rect = figma.createRectangle();
-    rect.x = i * 150;
-    rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-    figma.currentPage.appendChild(rect);
-    nodes.push(rect);
-  }
-  figma.currentPage.selection = nodes;
-  figma.viewport.scrollAndZoomIntoView(nodes);
-}
-
-function halveOpacity(msg: any) {
-  figma.currentPage.selection
-    .forEach(node => {
-      if ("opacity" in node) node.opacity *= 0.5;
-    })
-}
 
 function getColors(msg: any) {
   const fills: Paint[] = [];
@@ -94,34 +58,6 @@ function findFrame(selectedNode: SceneNode): FrameNode {
     return figma.createFrame();
     figma.closePlugin(`"Find Frame" requires the selected element to be contained in a frame.`);
   }
-}
-
-
-function swapColors(msg: any) {
-  const selection = getTextNodes(figma.currentPage.selection);
-
-  if (selection.length !== 2) {
-    figma.closePlugin(`"Swap Colors" works on exactly two text nodes.`);
-  } 
-  const [first, second] = selection;
-  const firstFills = first.fills as readonly Paint[];
-  const secondFills = second.fills as readonly Paint[];
-
-  if (firstFills.length === 0 || secondFills.length === 0) {
-    figma.closePlugin(`"Swap Colors" requires TextNodes to have a single Solid Paint fill.`)
-  }
-
-  const [firstFill] = first.fills as readonly Paint[];
-  const [secondFill] = second.fills as readonly Paint[];
-  if (firstFill.type === "SOLID" && secondFill.type === "SOLID") {
-    const fill1: SolidPaint = firstFill as SolidPaint;
-    const fill2: SolidPaint = secondFill as SolidPaint;
-    console.log(`${areColorsEqual(fill1.color, fill2.color)}      ${fill2}`);
-    first.fills = [fill2];
-    second.fills = [fill1];
-  }
-
-  
 }
 
 function getTextNodes(nodes: readonly SceneNode[]): TextNode[] {
@@ -168,16 +104,6 @@ function rgbToString({r,g,b}: RGB): string {
 function clone(obj: any) {
   return JSON.parse(JSON.stringify(obj));
 }
-
-// @TODO
-//  - new button: "Combinate Colors" DONE
-//  - new event handle: "combinate-colors" DONE
-//  - new if statement "combinate-colors" DONE
-//  - new function "combinateColors"
-//  -   for every node
-//        get it's fill color and add it to a dict that is color -> [Node]
-//        if I permute [[Node]] and assign colors to the same spots (i.e. pink -> 1)
-//          then I should get the same result.
 
 function combinateColors(msg: any) {
   const selection = figma.currentPage.selection;
