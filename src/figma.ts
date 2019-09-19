@@ -148,7 +148,9 @@ function doesTextNodeHaveSolidPaint(node: TextNode, paint: SolidPaint): boolean 
 
 function areSolidPaintsEqual(sp1: SolidPaint, sp2: SolidPaint) {
   return sp1.blendMode === sp2.blendMode &&
-         sp1.color === sp2.color &&
+         sp1.color.r === sp2.color.r &&
+         sp1.color.g === sp2.color.g &&
+         sp1.color.b === sp2.color.b &&
          sp1.opacity === sp2.opacity;
 }
 
@@ -203,22 +205,20 @@ function combinateColors(msg: any) {
     let nodeFill: SolidPaint = solidNodeFills[0];
 
     // TODO: replace color equality check with generic equality check
-    if (fills.filter(f => areColorsEqual(f.color, f.color)).length === 0)
+    if (fills.filter(f => areColorsEqual(f.color, nodeFill.color)).length === 0)
       fills.push(nodeFill);
 
-    // CREATE MAP OF COLOR-STRINGS TO NODES
 
   });
 
+  // CREATE MAP OF COLOR-STRINGS TO NODES
   const colorsToNodes: {[key: string]: TextNode[]} = {};
   fills.forEach(f => {
     const c = rgbToString(f.color);
-    const nodes = textNodes.filter(n => doesTextNodeHaveSolidPaint(n, f));
-    if (colorsToNodes[c]) {
-      colorsToNodes[c] = colorsToNodes[c].concat(nodes);
-    } else {
-      colorsToNodes[c] = nodes;
-    }
+    const nodes = textNodes
+      .filter(n => 
+        doesTextNodeHaveSolidPaint(n, f));
+    colorsToNodes[c] = nodes;
   });
   const colorOrders = permutation(fills);
   const nodeColorGroups: TextNode[][] = Object.values(colorsToNodes);
@@ -227,13 +227,13 @@ function combinateColors(msg: any) {
   let numClones = 0;
   colorOrders.forEach(co => {
     numClones++;
-    cloneFrame(numClones);
     co.forEach((f,i) => {
       nodeColorGroups[i].forEach(n => {
         // newFill.color = c;
         n.fills = [f]
       })
     })
+    cloneFrame(numClones);
   });
 }
 function permutation<T>(array: T[]): T[][] {
