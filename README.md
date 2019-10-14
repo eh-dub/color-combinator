@@ -9,6 +9,9 @@ Select elements that you want to see different combinations of and then hit the 
 <!-- @TODO embed trailer thumbnail https://stackoverflow.com/questions/11804820/embed-a-youtube-video -->
 I strongly encourage you to check out the [demo](https://vimeo.com/361205568) to see it in action.
 
+<iframe src="https://player.vimeo.com/video/361205568" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+
+
 CC is a brand new plugin and has a few limitations:
 - Supports only Text Nodes 
 - Nodes must have only one fill that is a solid paint
