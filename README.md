@@ -1,3 +1,5 @@
+![color combinator artwork](https://raw.githubusercontent.com/eh-dub/color-combinator/master/docs/Artwork.png)
+
 # Color Combinator
 Color Combinator (CC) is a [Figma plugin](https://www.figma.com/plugin-docs/intro/) for exploring different combinations of colors among elements.
 
